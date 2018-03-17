@@ -29,10 +29,10 @@ function getPrice(x) {
 function updateInfo() {
     $.get(url, function(data){
 
-		var Server = $(data).find("Server");
+        var Server = $(data).find("Server");
 
-		if (Server != null) {
-			$("#webStatsName").text($(Server).attr("name"));
+        if (Server != null) {
+            $("#webStatsName").text($(Server).attr("name"));
             $("#webStatsMapName").text($(Server).attr("mapName"));
             
             var dayTime = $(Server).attr("dayTime");
@@ -41,7 +41,7 @@ function updateInfo() {
             }
             
             var mapSize = $(Server).attr("mapSize");
-			var mapSizeHalf = mapSize / 2;
+            var mapSizeHalf = mapSize / 2;
             
             var Slots = $(data).find("Server Slots");
             if(Slots != null) {
@@ -51,33 +51,33 @@ function updateInfo() {
             }
             
             var webStatsPlayers = $("#webStatsPlayers");
-			var Players = $(data).find("Server Slots Player");
-			if (webStatsPlayers != null && Players != null) {
+            var Players = $(data).find("Server Slots Player");
+            if (webStatsPlayers != null && Players != null) {
                 $("#webStatsPlayers").find("tr:not(:first)").remove();
-				Players.each(function(index, element) {
-					var Player = $(element);
-					if (Player.attr("isUsed") == "true") {
+                Players.each(function(index, element) {
+                    var Player = $(element);
+                    if (Player.attr("isUsed") == "true") {
 
-						var uptime = Player.attr("uptime");
-						var hours = Math.floor(uptime/60);
-						var minutes = Math.floor(uptime-(hours*60));
+                        var uptime = Player.attr("uptime");
+                        var hours = Math.floor(uptime/60);
+                        var minutes = Math.floor(uptime-(hours*60));
 
                         var playerText = Player.text();
                         if (Player.attr("isAdmin") == "true") {
                             playerText = "<font color=\"red\">"+Player.text()+"</font>";
-						}
+                        }
 
-						if (minutes < 10) {minutes = "0"+minutes;}
-						webStatsPlayers.append("<tr><td>"+playerText+"</td><td>"+hours+"h "+minutes+"m</td></tr>");
-					}
-				});
-			}
+                        if (minutes < 10) {minutes = "0"+minutes;}
+                        webStatsPlayers.append("<tr><td>"+playerText+"</td><td>"+hours+"h "+minutes+"m</td></tr>");
+                    }
+                });
+            }
             
             var drivenVehicles = [];
             var webStatsMap = $("#webStatsMap");
             var Vehicles = $(data).find("Server Vehicles Vehicle");
             var Fields = $(data).find("Server Fields Field");
-			if (webStatsMap != null && Vehicles != null && Fields != null) {
+            if (webStatsMap != null && Vehicles != null && Fields != null) {
 
                 var linkToServer = url.replace("dedicated-server-stats.xml", "dedicated-server-stats-map.jpg");
 
@@ -131,7 +131,7 @@ function updateInfo() {
                     if(veh.attr("controller")) {
                         drivenVehicles.push("<tr><td>"+veh.attr("name")+"</td><td>"+veh.attr("controller")+"</td></tr>");
                     }
-				});
+                });
                 
                 var i = 0;
                 Fields.each(function(index, element) {
@@ -172,7 +172,7 @@ function updateInfo() {
                     $("#webStatsDriven").append(element);
                 });
                 
-			}
+            }
         }
         window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
     });
@@ -180,7 +180,7 @@ function updateInfo() {
 
 window.onload=function(e) {
     $("#updateIntervalSeconds").text(updateIntervalSeconds);
-	updateInfo();
+    updateInfo();
 };
 </script>
 <style>
