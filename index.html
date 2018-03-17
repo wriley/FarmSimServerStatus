@@ -1,0 +1,242 @@
+<html>
+<head><title>FarmSimServerStatus</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript" src="webStatsFunctions.js"></script>
+<script type="text/javascript">
+var updateIntervalSeconds = 30;
+var timeoutIntveralSeconds = 60;
+
+function getTime(ms) {
+    var seconds = ms / 1000;
+    var hours = parseInt(seconds / 3600);
+    seconds = seconds % 3600;
+    var minutes = parseInt(seconds / 60);
+    seconds = seconds % 60;
+    if(hours < 10) {
+        hours = "0"+hours;
+    }
+    if(minutes < 10) {
+        minutes = "0"+minutes;
+    }
+    return hours+":"+minutes;
+}
+
+function getPrice(x) {
+    return "$"+x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function updateInfo() {
+    $.get(url, function(data){
+
+		var Server = $(data).find("Server");
+
+		if (Server != null) {
+			$("#webStatsName").text($(Server).attr("name"));
+            $("#webStatsMapName").text($(Server).attr("mapName"));
+            
+            var dayTime = $(Server).attr("dayTime");
+            if(dayTime != null) {
+                $("#webStatsTime").text(getTime(dayTime));
+            }
+            
+            var mapSize = $(Server).attr("mapSize");
+			var mapSizeHalf = mapSize / 2;
+            
+            var Slots = $(data).find("Server Slots");
+            if(Slots != null) {
+                var online = $(Slots).attr('numUsed');
+                var slots = $(Slots).attr('capacity');
+                $("#webStatsPlayerSlots").text(online+"/"+slots);
+            }
+            
+            var webStatsPlayers = $("#webStatsPlayers");
+			var Players = $(data).find("Server Slots Player");
+			if (webStatsPlayers != null && Players != null) {
+                $("#webStatsPlayers").find("tr:not(:first)").remove();
+				Players.each(function(index, element) {
+					var Player = $(element);
+					if (Player.attr("isUsed") == "true") {
+
+						var uptime = Player.attr("uptime");
+						var hours = Math.floor(uptime/60);
+						var minutes = Math.floor(uptime-(hours*60));
+
+                        var playerText = Player.text();
+                        if (Player.attr("isAdmin") == "true") {
+                            playerText = "<font color=\"red\">"+Player.text()+"</font>";
+						}
+
+						if (minutes < 10) {minutes = "0"+minutes;}
+						webStatsPlayers.append("<tr><td>"+playerText+"</td><td>"+hours+"h "+minutes+"m</td></tr>");
+					}
+				});
+			}
+            
+            var drivenVehicles = [];
+            var webStatsMap = $("#webStatsMap");
+            var Vehicles = $(data).find("Server Vehicles Vehicle");
+            var Fields = $(data).find("Server Fields Field");
+			if (webStatsMap != null && Vehicles != null && Fields != null) {
+
+                var linkToServer = url.replace("dedicated-server-stats.xml", "dedicated-server-stats-map.jpg");
+
+                var imageQuality = 75;          // 60, 75, 90
+                var imageSize = 1024;           // 256, 512, 1024, 2048
+
+                var linkToImage = linkToServer.concat("&quality=");
+                linkToImage = linkToImage.concat(imageQuality);
+                linkToImage = linkToImage.concat("&size=");
+                linkToImage = linkToImage.concat(imageSize);
+
+                var machineIconSize = 10.0;
+                
+                webStatsMap.empty();
+
+                webStatsMap.append( "<img src=\"" + linkToImage + "\"  />" );
+
+                var stringToAppend = "<div id=\"mapElementsContainer\" >";
+                var i = 0;
+                Vehicles.each(function(index, element) {
+                    var veh = $(element);
+                    i = i + 1;
+
+                    var x = (parseFloat(veh.attr("x")) + mapSizeHalf) / (mapSize / imageSize);
+                    var z = (parseFloat(veh.attr("z")) + mapSizeHalf) / (mapSize / imageSize);
+
+                    x = x - (machineIconSize-1)/2;
+                    z = z - (machineIconSize-1)/2;
+
+                    var vehicleGroup = getVehicleType(veh.attr("category"), veh.attr("type"));
+
+                    var icon = "icons/" + vehicleGroup + ".png";
+                    var iconHover = "icons/" + vehicleGroup + "_selected.png";
+                    var backgroundColor = "#4dafd7";
+
+                    var curString = "<div id=\"vehicle" + i + "Container\" ";
+                    curString = curString + "style=\"position:absolute; left: " + x + "px; top: " + z + "px; \"";
+                    curString = curString + "onmouseout=\"document.getElementById('vehicle" + i + "').style.display='none'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + icon + "'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=1; \" ";
+                    curString = curString + "onmouseover=\"document.getElementById('vehicle" + i + "').style.display='block'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + iconHover + "'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=10; \"";
+                    curString = curString + " > ";
+                    curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
+                    curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
+                    curString = curString + "<nobr>" + veh.attr("name") + "</nobr>";
+                    curString = curString + "</div> </div>";
+                    stringToAppend = stringToAppend + curString;
+                    
+                    if(veh.attr("controller")) {
+                        drivenVehicles.push("<tr><td>"+veh.attr("name")+"</td><td>"+veh.attr("controller")+"</td></tr>");
+                    }
+				});
+                
+                var i = 0;
+                Fields.each(function(index, element) {
+                    var field = $(element);
+                    i = i + 1;
+
+                    var x = (parseFloat(field.attr("xPos")) + mapSizeHalf) / (mapSize / imageSize);
+                    var z = (parseFloat(field.attr("zPos")) + mapSizeHalf) / (mapSize / imageSize);
+                    
+                    var backgroundColor = "#4dafd7";
+
+                    x = x - (machineIconSize-1)/2;
+                    z = z - (machineIconSize-1)/2;
+                    
+                    var curString = "<div id=\"field" + i + "Container\" ";
+                    curString = curString + "style=\"position:absolute; left: " + (x - 4) + "px; top: " + (z - 4) + "px; \"";
+                    curString = curString + "onmouseout=\"document.getElementById('field" + i + "').style.display='none'; ";
+                    curString = curString + "document.getElementById('field" + i + "Container').style.zIndex=1; \" ";
+                    curString = curString + "onmouseover=\"document.getElementById('field" + i + "').style.display='block'; ";
+                    curString = curString + "document.getElementById('field" + i + "Container').style.zIndex=10; \"";
+                    curString = curString + " >";
+                    curString = curString + (field.attr("owned") == "true" ? "<font class=\"fieldOwned\">"+field.attr("number")+"</font>" : "<font class=\"field\">"+field.attr("number")+"</font>");
+                    curString = curString + "<div id=\"field" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+4) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
+                    if(field.attr("owned") == "true") {
+                        curString = curString + "<nobr>Field " + field.attr("number") + "<br>Size: "+ field.attr("area")+"<br>Price: OWNED</nobr>";
+                    } else {
+                        curString = curString + "<nobr>Field " + field.attr("number") + "<br>Size: "+ field.attr("area")+"<br>Price: "+ getPrice(field.attr("price")) +"</nobr>";
+                    }
+                    curString = curString + "</div> </div>";
+                    stringToAppend = stringToAppend + curString;
+                });
+                
+                stringToAppend = stringToAppend + "</div>";
+                webStatsMap.append(stringToAppend);
+                
+                $("#webStatsDriven").find("tr:not(:first)").remove();
+                drivenVehicles.forEach(function(element) {
+                    $("#webStatsDriven").append(element);
+                });
+                
+			}
+        }
+        window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
+    });
+}
+
+window.onload=function(e) {
+    $("#updateIntervalSeconds").text(updateIntervalSeconds);
+	updateInfo();
+};
+</script>
+<style>
+font.field {
+    color: #ffffff;
+    font-family: Georgia, serif;
+    text-shadow: 2px 2px 5px black;
+}
+
+font.fieldOwned {
+    color: #95FD8E;
+    font-family: Georgia, serif;
+    font-weight: bold;
+    text-shadow: 2px 2px 5px black;
+}
+</style>
+</head>
+<body>
+<em>NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but the server only updates info about every 5 minutes</em>
+
+<h2>Server Info</h2>
+
+<table>
+<tr><th>Name: </th><td id="webStatsName"><!-- Dynamic content from JS --></td></tr>
+<tr><th>Map: </th><td id="webStatsMapName"><!-- Dynamic content from JS --></td></tr>
+<tr><th>Players/Slots: </th><td id="webStatsPlayerSlots"><!-- Dynamic content from JS --></td></tr>
+<tr><th>Server Time: </th><td id="webStatsTime"><!-- Dynamic content from JS --></td></tr>
+</table>
+
+<h2>Players</h2>
+
+<table id="webStatsPlayers">
+<tr><th>Name</th><th>Uptime</th></tr>
+<!-- Dynamic content from JS -->
+</table>
+
+<h2>Driven Vehicles</h2>
+
+<table id="webStatsDriven">
+<tr><th>Vehicle</th><th>Driver</th></tr>
+<!-- Dynamic content from JS -->
+</table>
+
+<h2>Map</h2>
+<table>
+<tr><td><img src="icons/harvester.png" height="15" width="15"></td><td>Harvester</td></tr>
+<tr><td><img src="icons/tool.png" height="15" width="15"></td><td>Tool</td></tr>
+<tr><td><img src="icons/trailer.png" height="15" width="15"></td><td>Trailer</td></tr>
+<tr><td><img src="icons/vehicle.png" height="15" width="15"></td><td>Vehicle</td></tr>
+</table>
+
+<div id="webStatsMap" style="position:relative; width:1024px; height:1024px; overflow:visible">
+<!-- Dynamic content from JS -->
+</div>
+
+<p>
+Powered By <a href="http://www.giants-software.com/">GIANTS Software</a>
+</body>
+</html>
