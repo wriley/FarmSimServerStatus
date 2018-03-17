@@ -124,7 +124,21 @@ function updateInfo() {
                     curString = curString + " > ";
                     curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
                     curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
-                    curString = curString + "<nobr>" + veh.attr("name") + "</nobr>";
+                    if(veh.attr("fillTypes") != "unknown" && veh.attr("fillTypes") != undefined) {
+                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"<br>Filled with<br>";
+                        var fillLevels = veh.attr("fillLevels").split(" ");
+                        var fillTypes = veh.attr("fillTypes").split(" ");
+                        for(var j = 0; j < fillLevels.length; j++) {
+                            if(fillLevels[j] != null && fillTypes[j] != null) {
+                                curString = curString + "&nbsp;&nbsp;"+fillTypes[j]+": "+Math.round(fillLevels[j])+"<br>";
+                            }
+                        }
+                        
+                        curString = curString + "</nobr>";
+                    } else {
+                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"</nobr>";
+                    }
+                    
                     curString = curString + "</div> </div>";
                     stringToAppend = stringToAppend + curString;
                     
