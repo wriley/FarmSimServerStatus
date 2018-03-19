@@ -8,6 +8,8 @@ var updateIntervalSeconds = 30;
 var updateFarmIntervalSeconds = 300;
 var timeoutIntveralSeconds = 60;
 
+var mapShowTypeChecked = [];
+
 function getTime(ms) {
     var seconds = ms / 1000;
     var hours = parseInt(seconds / 3600);
@@ -28,6 +30,10 @@ function getPrice(x) {
 }
 
 function updateInfo() {
+    mapShowTypeChecked = $("#mapShowType input:checkbox:checked").map(function(){
+        return $(this).val();
+    }).get();
+    
     $.get(url, function(data){
 
         var Server = $(data).find("Server");
@@ -49,6 +55,11 @@ function updateInfo() {
                 var online = $(Slots).attr('numUsed');
                 var slots = $(Slots).attr('capacity');
                 $("#webStatsPlayerSlots").text(online+"/"+slots);
+                if(online > 0) {
+                    $("#webStatsPlayersContainer").show();
+                } else {
+                    $("#webStatsPlayersContainer").hide();
+                }
             }
             
             var webStatsPlayers = $("#webStatsPlayers");
@@ -74,7 +85,6 @@ function updateInfo() {
                 });
             }
             
-            var drivenVehicles = [];
             var webStatsMap = $("#webStatsMap");
             var Vehicles = $(data).find("Server Vehicles Vehicle");
             var Fields = $(data).find("Server Fields Field");
@@ -110,41 +120,39 @@ function updateInfo() {
 
                     var vehicleGroup = getVehicleType(veh.attr("category"), veh.attr("type"));
 
-                    var icon = "icons/" + vehicleGroup + ".png";
-                    var iconHover = "icons/" + vehicleGroup + "_selected.png";
-                    var backgroundColor = "#4dafd7";
+                    if(mapShowTypeChecked.indexOf(vehicleGroup) >= 0) {
+                        var icon = "icons/" + vehicleGroup + ".png";
+                        var iconHover = "icons/" + vehicleGroup + "_selected.png";
+                        var backgroundColor = "#4dafd7";
 
-                    var curString = "<div id=\"vehicle" + i + "Container\" ";
-                    curString = curString + "style=\"position:absolute; left: " + x + "px; top: " + z + "px; \"";
-                    curString = curString + "onmouseout=\"document.getElementById('vehicle" + i + "').style.display='none'; ";
-                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + icon + "'; ";
-                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=1; \" ";
-                    curString = curString + "onmouseover=\"document.getElementById('vehicle" + i + "').style.display='block'; ";
-                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + iconHover + "'; ";
-                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=10; \"";
-                    curString = curString + " > ";
-                    curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
-                    curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
-                    if(veh.attr("fillTypes") != "unknown" && veh.attr("fillTypes") != undefined) {
-                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"<br>Filled with<br>";
-                        var fillLevels = veh.attr("fillLevels").split(" ");
-                        var fillTypes = veh.attr("fillTypes").split(" ");
-                        for(var j = 0; j < fillLevels.length; j++) {
-                            if(fillLevels[j] != null && fillTypes[j] != null) {
-                                curString = curString + "&nbsp;&nbsp;"+fillTypes[j]+": "+Math.round(fillLevels[j])+"<br>";
+                        var curString = "<div id=\"vehicle" + i + "Container\" class=\"vehicleContainer\"";
+                        curString = curString + "style=\"position:absolute; left: " + x + "px; top: " + z + "px; \"";
+                        curString = curString + "onmouseout=\"document.getElementById('vehicle" + i + "').style.display='none'; ";
+                        curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + icon + "'; ";
+                        curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=1; \" ";
+                        curString = curString + "onmouseover=\"document.getElementById('vehicle" + i + "').style.display='block'; ";
+                        curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + iconHover + "'; ";
+                        curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=10; \"";
+                        curString = curString + " > ";
+                        curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
+                        curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
+                        if(veh.attr("fillTypes") != "unknown" && veh.attr("fillTypes") != undefined) {
+                            curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"<br>Filled with<br>";
+                            var fillLevels = veh.attr("fillLevels").split(" ");
+                            var fillTypes = veh.attr("fillTypes").split(" ");
+                            for(var j = 0; j < fillLevels.length; j++) {
+                                if(fillLevels[j] != null && fillTypes[j] != null) {
+                                    curString = curString + "&nbsp;&nbsp;"+fillTypes[j]+": "+Math.round(fillLevels[j])+"<br>";
+                                }
                             }
+                            
+                            curString = curString + "</nobr>";
+                        } else {
+                            curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"</nobr>";
                         }
                         
-                        curString = curString + "</nobr>";
-                    } else {
-                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"</nobr>";
-                    }
-                    
-                    curString = curString + "</div> </div>";
-                    stringToAppend = stringToAppend + curString;
-                    
-                    if(veh.attr("controller")) {
-                        drivenVehicles.push("<tr><td>"+veh.attr("name")+"</td><td>"+veh.attr("controller")+"</td></tr>");
+                        curString = curString + "</div> </div>";
+                        stringToAppend = stringToAppend + curString;
                     }
                 });
                 
@@ -181,12 +189,6 @@ function updateInfo() {
                 
                 stringToAppend = stringToAppend + "</div>";
                 webStatsMap.append(stringToAppend);
-                
-                $("#webStatsDriven").find("tr:not(:first)").remove();
-                drivenVehicles.forEach(function(element) {
-                    $("#webStatsDriven").append(element);
-                });
-                
             }
         }
         window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
@@ -195,33 +197,38 @@ function updateInfo() {
     });
 }
 
-function updateFarmInfo() {   
-    $.get(url2, function(data){
+function updateFarmInfo() {
+    if (typeof url2 != 'undefined') {
+        $.get(url2, function(data){
 
-        var webStatsFarms = $("#webStatsFarms");
-        var userNames = $(data).find("careerSavegame FarmingTablet MpManagement config userNames userName");
-        
-        if (webStatsFarms != null && userNames != null) {
-            $("#webStatsFarms").find("tr:not(:first)").remove();
-            userNameLines = [];
-            userNames.each(function(index, element) {
-                var userName = $(element);
-                
-                if(userName.attr("name") != null && userName.attr("farm") != null) {
-                    userNameLines.push("<tr><td>"+ userName.attr("name") +"</td><td>"+ userName.attr("farm") +"</td>");
-                }
-            });
-            userNameLines.sort(function(a, b) {
-                return a.toLowerCase().localeCompare(b.toLowerCase());
-            });
-            userNameLines.forEach(function(element) {
-                    webStatsFarms.append(element);
+            var webStatsFarms = $("#webStatsFarms");
+            var userNames = $(data).find("careerSavegame FarmingTablet MpManagement config userNames userName");
+            
+            if (webStatsFarms != null && userNames != null) {
+                $("#webStatsFarms").find("tr:not(:first)").remove();
+                userNameLines = [];
+                userNames.each(function(index, element) {
+                    var userName = $(element);
+                    
+                    if(userName.attr("name") != null && userName.attr("farm") != null) {
+                        userNameLines.push("<tr><td>"+ userName.attr("name") +"</td><td>"+ userName.attr("farm") +"</td>");
+                    }
                 });
-        }
-        window.setTimeout(updateFarmInfo, updateFarmIntervalSeconds * 1000);
-    }).fail(function() {
-        console.log("updateFarmInfo() failed");
-    });
+                userNameLines.sort(function(a, b) {
+                    return a.toLowerCase().localeCompare(b.toLowerCase());
+                });
+                userNameLines.forEach(function(element) {
+                        webStatsFarms.append(element);
+                    });
+            }
+            $("#webStatsFarmsContainer").show();
+            window.setTimeout(updateFarmInfo, updateFarmIntervalSeconds * 1000);
+        }).fail(function() {
+            console.log("updateFarmInfo() failed");
+        });
+    } else {
+        $("#webStatsFarmsContainer").hide();
+    }
 }
 
 window.onload=function(e) {
@@ -229,6 +236,28 @@ window.onload=function(e) {
     updateInfo();
     updateFarmInfo();
 };
+
+function mapShowTypeChanged() {
+    mapShowTypeChecked = $("#mapShowType input:checkbox:checked").map(function(){
+        return $(this).val();
+    }).get();
+    mapShowTypeUpdate();
+}
+
+function mapShowTypeUpdate() {
+    var vehicleDivs = $(".vehicleContainer");
+    vehicleDivs.each(function(index, element) {
+        var found = $(element).children('img').attr('src').match(new RegExp("icons/(.*).png"));
+        if(found) {
+            var type = found[1];
+            if(mapShowTypeChecked.indexOf(type) < 0) {
+                $(element).hide();
+            } else {
+                $(element).show();
+            }
+        }
+    });
+}
 </script>
 <style>
 font.field {
@@ -243,60 +272,73 @@ font.fieldOwned {
     font-weight: bold;
     text-shadow: 2px 2px 5px black;
 }
+caption {
+    font-weight: bold;
+    font-size: 14pt;
+    text-align: left;
+}
 td {
+    vertical-align: top;
     text-align: left;
 }
 th {
     text-align: left;
 }
+.note {
+    font-style: italic;
+    font-size: 9pt;
+    color: #a0a0a0;
+}
+.label {
+    font-weight: bold;
+    font-size: 12pt;
+}
+body {
+    font-size: 12pt;
+}
+div {
+    padding: 2px;
+}
 </style>
 </head>
 <body>
-<em>NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but the server only updates info about every 5 minutes</em>
+<div>
+    <div>
+        <span class="label">Name: </span><span id="webStatsName"></span>
+        <span class="label">Map: </span><span id="webStatsMapName"></span>
+        <span class="label">Players/Slots: </span><span id="webStatsPlayerSlots"></span>
+        <span class="label">Server Time: </span><span id="webStatsTime"></span>
+        &nbsp;&nbsp;
+        <span class="note">NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but the server only updates info about every 5 minutes</span>
+    </div>
+<br>
+    <div style="display:none;" id="webStatsPlayersContainer">
+        <table id="webStatsPlayers">
+        <caption>Players Online</caption>
+        <tr><th>Name</th><th>Uptime</th></tr>
+        </table>
+    </div>
+<br>
+    <div id="mapShowType">
+        <input type="checkbox" checked value="harvester" onClick="javascript:mapShowTypeChanged();"><img src="icons/harvester.png" height="15" width="15">&nbsp;Harvester&nbsp;&nbsp;
+        <input type="checkbox" checked value="tool" onClick="javascript:mapShowTypeChanged();"></td><td><img src="icons/tool.png" height="15" width="15">&nbsp;Tool&nbsp;&nbsp;
+        <input type="checkbox" checked value="trailer" onClick="javascript:mapShowTypeChanged();"></td><td><img src="icons/trailer.png" height="15" width="15">&nbsp;Trailer&nbsp;&nbsp;
+        <input type="checkbox" checked value="vehicle" onClick="javascript:mapShowTypeChanged();"></td><td><img src="icons/vehicle.png" height="15" width="15">&nbsp;Vehicle
+    </div>
 
-<h2>Server Info</h2>
-
-<table>
-<tr><th>Name: </th><td id="webStatsName"><!-- Dynamic content from JS --></td></tr>
-<tr><th>Map: </th><td id="webStatsMapName"><!-- Dynamic content from JS --></td></tr>
-<tr><th>Players/Slots: </th><td id="webStatsPlayerSlots"><!-- Dynamic content from JS --></td></tr>
-<tr><th>Server Time: </th><td id="webStatsTime"><!-- Dynamic content from JS --></td></tr>
-</table>
-
-<h2>Players</h2>
-
-<table id="webStatsPlayers">
-<tr><th>Name</th><th>Uptime</th></tr>
-<!-- Dynamic content from JS -->
-</table>
-
-<h2>Driven Vehicles</h2>
-
-<table id="webStatsDriven">
-<tr><th>Vehicle</th><th>Driver</th></tr>
-<!-- Dynamic content from JS -->
-</table>
-
-<h2>Farms</h2>
-
-<table id="webStatsFarms">
-<tr><th>Username</th><th>Farm Name</th></tr>
-<!-- Dynamic content from JS -->
-</table>
-
-<h2>Map</h2>
-<table>
-<tr><td><img src="icons/harvester.png" height="15" width="15"></td><td>Harvester</td></tr>
-<tr><td><img src="icons/tool.png" height="15" width="15"></td><td>Tool</td></tr>
-<tr><td><img src="icons/trailer.png" height="15" width="15"></td><td>Trailer</td></tr>
-<tr><td><img src="icons/vehicle.png" height="15" width="15"></td><td>Vehicle</td></tr>
-</table>
-
-<div id="webStatsMap" style="position:relative; width:1024px; height:1024px; overflow:visible">
-<!-- Dynamic content from JS -->
+    <table>
+    <tr><td><div id="webStatsMap" style="position:relative; width:1024px; height:1024px; overflow:visible"></div></td>
+        <td>
+        <div id="webStatsFarmsContainer" style="display:none">
+            <table id="webStatsFarms">
+            <tr><th>Username</th><th>Farm Name</th></tr>
+            </table>
+        </div></td></tr>
+    </table>
+    
+    <div>
+    Powered By <a href="http://www.giants-software.com/">GIANTS Software</a>
+    </div>
 </div>
-
-<p>
-Powered By <a href="http://www.giants-software.com/">GIANTS Software</a>
 </body>
 </html>
