@@ -188,7 +188,31 @@ function updateInfo() {
                 
             }
         }
-        window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
+        //window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
+    });
+    
+    $.get(url2, function(data){
+
+        var webStatsFarms = $("#webStatsFarms");
+        var userNames = $(data).find("careerSavegame FarmingTablet MpManagement config userNames userName");
+        
+        if (webStatsFarms != null && userNames != null) {
+            $("#webStatsFarms").find("tr:not(:first)").remove();
+            userNameLines = [];
+            userNames.each(function(index, element) {
+                var userName = $(element);
+                
+                if(userName.attr("name") != null && userName.attr("farm") != null) {
+                    userNameLines.push("<tr><td>"+ userName.attr("name") +"</td><td>"+ userName.attr("farm") +"</td>");
+                }
+            });
+            userNameLines.sort(function(a, b) {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
+            userNameLines.forEach(function(element) {
+                    webStatsFarms.append(element);
+                });
+        }
     });
 }
 
@@ -209,6 +233,12 @@ font.fieldOwned {
     font-family: Georgia, serif;
     font-weight: bold;
     text-shadow: 2px 2px 5px black;
+}
+td {
+    text-align: left;
+}
+th {
+    text-align: left;
 }
 </style>
 </head>
@@ -235,6 +265,13 @@ font.fieldOwned {
 
 <table id="webStatsDriven">
 <tr><th>Vehicle</th><th>Driver</th></tr>
+<!-- Dynamic content from JS -->
+</table>
+
+<h2>Farms</h2>
+
+<table id="webStatsFarms">
+<tr><th>Username</th><th>Farm Name</th></tr>
 <!-- Dynamic content from JS -->
 </table>
 
