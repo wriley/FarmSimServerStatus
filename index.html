@@ -5,6 +5,7 @@
 <script type="text/javascript" src="webStatsFunctions.js"></script>
 <script type="text/javascript">
 var updateIntervalSeconds = 30;
+var updateFarmIntervalSeconds = 300;
 var timeoutIntveralSeconds = 60;
 
 function getTime(ms) {
@@ -188,9 +189,13 @@ function updateInfo() {
                 
             }
         }
-        //window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
+        window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
+    }).fail(function() {
+        console.log("updateInfo() failed");
     });
-    
+}
+
+function updateFarmInfo() {   
     $.get(url2, function(data){
 
         var webStatsFarms = $("#webStatsFarms");
@@ -213,12 +218,16 @@ function updateInfo() {
                     webStatsFarms.append(element);
                 });
         }
+        window.setTimeout(updateFarmInfo, updateFarmIntervalSeconds * 1000);
+    }).fail(function() {
+        console.log("updateFarmInfo() failed");
     });
 }
 
 window.onload=function(e) {
     $("#updateIntervalSeconds").text(updateIntervalSeconds);
     updateInfo();
+    updateFarmInfo();
 };
 </script>
 <style>
