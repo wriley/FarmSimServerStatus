@@ -119,41 +119,39 @@ function updateInfo() {
                     z = z - (machineIconSize-1)/2;
 
                     var vehicleGroup = getVehicleType(veh.attr("category"), veh.attr("type"));
+                    var icon = "icons/" + vehicleGroup + ".png";
+                    var iconHover = "icons/" + vehicleGroup + "_selected.png";
+                    var backgroundColor = "#4dafd7";
 
-                    if(mapShowTypeChecked.indexOf(vehicleGroup) >= 0) {
-                        var icon = "icons/" + vehicleGroup + ".png";
-                        var iconHover = "icons/" + vehicleGroup + "_selected.png";
-                        var backgroundColor = "#4dafd7";
-
-                        var curString = "<div id=\"vehicle" + i + "Container\" class=\"vehicleContainer\"";
-                        curString = curString + "style=\"position:absolute; left: " + x + "px; top: " + z + "px; \"";
-                        curString = curString + "onmouseout=\"document.getElementById('vehicle" + i + "').style.display='none'; ";
-                        curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + icon + "'; ";
-                        curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=1; \" ";
-                        curString = curString + "onmouseover=\"document.getElementById('vehicle" + i + "').style.display='block'; ";
-                        curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + iconHover + "'; ";
-                        curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=10; \"";
-                        curString = curString + " > ";
-                        curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
-                        curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
-                        if(veh.attr("fillTypes") != "unknown" && veh.attr("fillTypes") != undefined) {
-                            curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"<br>Filled with<br>";
-                            var fillLevels = veh.attr("fillLevels").split(" ");
-                            var fillTypes = veh.attr("fillTypes").split(" ");
-                            for(var j = 0; j < fillLevels.length; j++) {
-                                if(fillLevels[j] != null && fillTypes[j] != null) {
-                                    curString = curString + "&nbsp;&nbsp;"+fillTypes[j]+": "+Math.round(fillLevels[j])+"<br>";
-                                }
+                    var curString = "<div id=\"vehicle" + i + "Container\" class=\"vehicleContainer\"";
+                    curString = curString + "style=\"position:absolute; left: " + x + "px; top: " + z + "px; \"";
+                    curString = curString + "onmouseout=\"document.getElementById('vehicle" + i + "').style.display='none'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + icon + "'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=1; \" ";
+                    curString = curString + "onmouseover=\"document.getElementById('vehicle" + i + "').style.display='block'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Image').src='" + iconHover + "'; ";
+                    curString = curString + "document.getElementById('vehicle" + i + "Container').style.zIndex=10; \"";
+                    curString = curString + " > ";
+                    curString = curString + "<image id=\"vehicle" + i + "Image\" src=\"" + icon + "\" width=\"" + machineIconSize + "\" height=\"" + machineIconSize + "\" />";
+                    curString = curString + "<div id=\"vehicle" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+1) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
+                    if(veh.attr("fillTypes") != "unknown" && veh.attr("fillTypes") != undefined) {
+                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"<br>Filled with<br>";
+                        var fillLevels = veh.attr("fillLevels").split(" ");
+                        var fillTypes = veh.attr("fillTypes").split(" ");
+                        for(var j = 0; j < fillLevels.length; j++) {
+                            if(fillLevels[j] != null && fillTypes[j] != null) {
+                                curString = curString + "&nbsp;&nbsp;"+fillTypes[j]+": "+Math.round(fillLevels[j])+"<br>";
                             }
-                            
-                            curString = curString + "</nobr>";
-                        } else {
-                            curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"</nobr>";
                         }
                         
-                        curString = curString + "</div> </div>";
-                        stringToAppend = stringToAppend + curString;
+                        curString = curString + "</nobr>";
+                    } else {
+                        curString = curString + "<nobr>Name: " + veh.attr("name") + "<br>Category: "+ veh.attr("category") +"</nobr>";
                     }
+                    
+                    curString = curString + "</div> </div>";
+                    stringToAppend = stringToAppend + curString;
+
                 });
                 
                 var i = 0;
@@ -191,6 +189,7 @@ function updateInfo() {
                 webStatsMap.append(stringToAppend);
             }
         }
+        mapShowTypeUpdate();
         window.setTimeout(updateInfo, updateIntervalSeconds * 1000);
     }).fail(function() {
         console.log("updateInfo() failed");
