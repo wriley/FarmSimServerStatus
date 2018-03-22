@@ -205,17 +205,36 @@ function updateFarmInfo() {
             
             if (webStatsFarms != null && userNames != null) {
                 $("#webStatsFarms").find("tr:not(:first)").remove();
-                userNameLines = [];
+                
+                farms = [];
                 userNames.each(function(index, element) {
                     var userName = $(element);
                     
                     if(userName.attr("name") != null && userName.attr("farm") != null) {
-                        userNameLines.push("<tr><td>"+ userName.attr("name") +"</td><td>"+ userName.attr("farm") +"</td>");
+                        var farm = userName.attr("farm");
+                        var name = userName.attr("name")
+                        if(farms[farm] != undefined) {
+                            farms[farm] += ", " + name;
+                        } else {
+                            farms[farm] = name;
+                        }
                     }
                 });
-                userNameLines.sort(function(a, b) {
-                    return a.toLowerCase().localeCompare(b.toLowerCase());
+                
+                var keys = [];
+
+                for(var key in farms) {
+                    keys.push(key);
+                }
+
+                keys.sort();
+                
+                var userNameLines = [];
+                
+                keys.forEach(function(element) {
+                    userNameLines.push("<tr><td>" + element + "</td><td>" + farms[element] + "</td></tr>");
                 });
+
                 userNameLines.forEach(function(element) {
                         webStatsFarms.append(element);
                     });
@@ -330,7 +349,7 @@ div {
         <td>
         <div id="webStatsFarmsContainer" style="display:none">
             <table id="webStatsFarms">
-            <tr><th>Username</th><th>Farm Name</th></tr>
+            <tr><th>Farm Name</th><th>Users</th></tr>
             </table>
         </div></td></tr>
     </table>
