@@ -176,11 +176,7 @@ function updateInfo() {
                     curString = curString + " >";
                     curString = curString + (field.attr("owned") == "true" ? "<font class=\"fieldOwned\">"+field.attr("number")+"</font>" : "<font class=\"field\">"+field.attr("number")+"</font>");
                     curString = curString + "<div id=\"field" + i + "\" style=\"display:none; position:absolute; bottom:0px; left:" + (machineIconSize+4) + "; background:" + backgroundColor + "; padding-left:8px; padding-right:8px; color:#ffffff; \">";
-                    if(field.attr("owned") == "true") {
-                        curString = curString + "<nobr>Field " + field.attr("number") + "<br>Size: "+ field.attr("area")+"<br>Price: OWNED</nobr>";
-                    } else {
-                        curString = curString + "<nobr>Field " + field.attr("number") + "<br>Size: "+ field.attr("area")+"<br>Price: "+ getPrice(field.attr("price")) +"</nobr>";
-                    }
+                    curString = curString + "<nobr>Field " + field.attr("number") + "<br>Size: "+ field.attr("area")+"<br>Price: "+ getPrice(field.attr("price")) + (field.attr("owned") == "true" ? " (OWNED)</nobr>" : "</nobr>");
                     curString = curString + "</div> </div>";
                     stringToAppend = stringToAppend + curString;
                 });
