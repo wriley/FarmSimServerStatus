@@ -162,6 +162,10 @@ function updateInfo() {
                     var x = (parseFloat(field.attr("xPos")) + mapSizeHalf) / (mapSize / imageSize);
                     var z = (parseFloat(field.attr("zPos")) + mapSizeHalf) / (mapSize / imageSize);
                     
+                    if(x > mapSizeHalf ||  z > mapSizeHalf) {
+                        return true;
+                    }
+                    
                     var backgroundColor = "#4dafd7";
 
                     x = x - (machineIconSize-1)/2;
