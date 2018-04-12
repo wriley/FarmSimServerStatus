@@ -8,6 +8,29 @@ var updateIntervalSeconds = 30;
 var updateFarmIntervalSeconds = 300;
 var timeoutIntveralSeconds = 60;
 
+var seasonsTransitions = [
+    'DUMMY',
+    
+    'Early Spring',
+    'Mid Spring',
+    'Late Spring',
+    
+    'Early Summer',
+    'Mid Summer',
+    'Late Summer',
+    
+    'Early Autumn',
+    'Mid Autumn',
+    'Late Autumn',
+    
+    'Early Winter',
+    'Mid Winter',
+    'Late Winter'
+];
+
+// https://gist.github.com/wteuber/6241786
+Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };
+
 var mapShowTypeChecked = [];
 
 function getTime(ms) {
@@ -28,6 +51,8 @@ function getTime(ms) {
 function getPrice(x) {
     return "$"+x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+function pad(num, size=2){ return ('000000000' + num).substr(-size); }
 
 function updateInfo() {
     mapShowTypeChecked = $("#mapShowType input:checkbox:checked").map(function(){
@@ -240,12 +265,73 @@ function updateFarmInfo() {
                     });
             }
             $("#webStatsFarmsContainer").show();
+
+            // get day, season, soil temp, and forecast
+            var environment = $(data).find("careerSavegame environment");
+            var ssSeasonsEnvironment = $(data).find("careerSavegame ssSeasons environment");
+            var ssSeasonsSettings = $(data).find("careerSavegame ssSeasons settings");
+            
+            if(environment != null && ssSeasonsEnvironment != null && ssSeasonsSettings != null) {
+                // get day
+                var currentDayRaw = parseInt($(environment).children("currentDay").text());
+                var currentDayOffset = parseInt($(ssSeasonsEnvironment).children("currentDayOffset_DO_NOT_CHANGE").text());
+                var daysInSeason = parseInt($(ssSeasonsSettings).children("daysInSeason").text());
+                var currentDay = currentDayRaw + currentDayOffset;
+                //console.log("currentDay: " + currentDay + "  currentDayOffset: " + currentDayOffset + "  daysInSeason: " + daysInSeason);
+                
+                var season = Math.fmod(Math.floor((currentDay - 1) / daysInSeason), 4);
+                var dayInYear = Math.fmod(currentDay - 1, daysInSeason * 4) + 1;
+                var day = (dayInYear - 1 - season * daysInSeason) + 1;
+                //console.log("day: " + day);
+                
+                // get season
+                var latestSeason = $(ssSeasonsEnvironment).children("latestSeason").text();
+                var latestTransition = $(ssSeasonsEnvironment).children("latestTransition").text();
+                var season = seasonsTransitions[latestTransition];
+                            
+                //console.log("season: " + season);
+                $("#webStatsDay").text(pad(day) + "/" + season);
+                
+                // get soil temp
+                var ssSeasonsWeather = $(data).find("careerSavegame weather");
+                var soilTemp = $(ssSeasonsWeather).children("soilTemp").text();
+                
+                $("#webStatsSoilTemp").text(Math.round(soilTemp) + "C");
+                
+                $("#webStatsWeatherContainer").show();
+                
+                // get forecast
+                var ssSeasonsForecastDays = $(data).find("careerSavegame weather forecast day");
+                var webStatsForecast = $("#webStatsForecast");
+                
+                var forecastLines = "<tr>";
+                var i = 0;
+                ssSeasonsForecastDays.each(function(index, element) {
+                    var day = $(element);
+                    //console.log("day " + day.attr("day") + " " + day.attr("weatherState") + " " + day.attr("highTemp") + " " + day.attr("lowTemp"));
+                    if(i == 0) {
+                        $("#webStatsTodayForecast").text(day.attr("weatherState") + " " + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C");
+                    } else {
+                        forecastLines += "<td class=\"forecastCell\">" + day.attr("weatherState") + "<br>" + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C</td>";
+                    }
+                    i++;
+                });
+                forecastLines += "</tr>";
+                $("#webStatsForecast").find("tr").remove();
+                webStatsForecast.append(forecastLines);
+                
+                
+                $("#webStatsForecastContainer").show();
+            }
+            
             window.setTimeout(updateFarmInfo, updateFarmIntervalSeconds * 1000);
         }).fail(function() {
             console.log("updateFarmInfo() failed");
         });
     } else {
         $("#webStatsFarmsContainer").hide();
+        $("#webStatsWeatherContainer").hide();
+        $("#webStatsForecastContainer").hide();
     }
 }
 
@@ -317,6 +403,11 @@ body {
 div {
     padding: 2px;
 }
+td.forecastCell {
+    text-align: center;
+    padding: 2px;
+    border: 1px solid black;
+}
 </style>
 </head>
 <body>
@@ -328,6 +419,18 @@ div {
         <span class="label">Server Time: </span><span id="webStatsTime"></span>&nbsp;&nbsp;
 
         <span class="note">NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but the server only updates info about every 5 minutes</span>
+    </div>
+
+    <div id="webStatsWeatherContainer" style="display:none">
+        <span class="label">Day: </span><span id="webStatsDay"></span>&nbsp;&nbsp;
+        <span class="label">Soil Temp: </span><span id="webStatsSoilTemp"></span>&nbsp;&nbsp;
+        <span class="label">Today: </span><span id="webStatsTodayForecast"></span>&nbsp;&nbsp;
+    </div>
+<br>
+    <div id="webStatsForecastContainer" style="display:none">
+        <table id="webStatsForecast">
+        <caption>Weekly Forecast</weekly>
+        </table>
     </div>
 <br>
     <div style="display:none;" id="webStatsPlayersContainer">
@@ -360,3 +463,4 @@ div {
 </div>
 </body>
 </html>
+
