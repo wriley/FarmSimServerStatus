@@ -39,10 +39,13 @@ var weekDays = [
     'Sunday'
 ];
 
+var gameDay = -1;
+
 // https://gist.github.com/wteuber/6241786
 Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };
 
 var mapShowTypeChecked = [];
+var vehiclesArray = [];
 
 function getTime(ms) {
     var seconds = ms / 1000;
@@ -76,7 +79,7 @@ function updateInfo() {
         return $(this).val();
     }).get();
     
-    $.get(url, function(data){
+    $.get(urlStats, function(data){
 
         var Server = $(data).find("Server");
 
@@ -132,7 +135,7 @@ function updateInfo() {
             var Fields = $(data).find("Server Fields Field");
             if (webStatsMap != null && Vehicles != null && Fields != null) {
 
-                var linkToServer = url.replace("dedicated-server-stats.xml", "dedicated-server-stats-map.jpg");
+                var linkToServer = urlStats.replace("dedicated-server-stats.xml", "dedicated-server-stats-map.jpg");
 
                 var imageQuality = 75;          // 60, 75, 90
                 var imageSize = 1024;           // 256, 512, 1024, 2048
@@ -238,9 +241,10 @@ function updateInfo() {
     });
 }
 
-function updateFarmInfo() {
-    if (typeof url2 != 'undefined') {
-        $.get(url2, function(data){
+function updateCareerSavegameInfo() {
+    if (typeof urlSavegame != 'undefined') {
+        // careerSavegame
+        $.get(urlSavegame, function(data){
 
             var webStatsFarms = $("#webStatsFarms");
             var userNames = $(data).find("careerSavegame FarmingTablet MpManagement config userNames userName");
@@ -291,6 +295,7 @@ function updateFarmInfo() {
             if(environment != null && ssSeasonsEnvironment != null && ssSeasonsSettings != null) {
                 // get day
                 var currentDayRaw = parseInt($(environment).children("currentDay").text());
+                gameDay = currentDayRaw;
                 var currentDayOffset = parseInt($(ssSeasonsEnvironment).children("currentDayOffset_DO_NOT_CHANGE").text());
                 var daysInSeason = parseInt($(ssSeasonsSettings).children("daysInSeason").text());
                 var currentDay = currentDayRaw + currentDayOffset;
@@ -344,9 +349,11 @@ function updateFarmInfo() {
                 $("#webStatsForecastContainer").show();
             }
             
-            window.setTimeout(updateFarmInfo, updateFarmIntervalSeconds * 1000);
+            updateEconomyInfo();
+            
+            window.setTimeout(updateCareerSavegameInfo, updateFarmIntervalSeconds * 1000);
         }).fail(function() {
-            console.log("updateFarmInfo() failed");
+            console.log("updateCareerSavegameInfo() failed for " + urlSavegame);
         });
     } else {
         $("#webStatsFarmsContainer").hide();
@@ -355,10 +362,101 @@ function updateFarmInfo() {
     }
 }
 
+function getVehicles() {
+/*
+<vehicle id="1" filename="data/vehicles/tools/greatPlains/gp3P1006NT.xml" isAbsolute="true" age="56" price="15000" propertyState="1" operatingTime="5635.8579101563" lowerAnimTime="1" fillTypes="seeds unknown" fillLevels="578.07824299275 0" selectedSeedFruitType="grass" foldAnimTime="1" isCoverOpen="false" dirtAmount="0.49399733543396" ssLastRepairDay="62" ssYesterdayOperatingTime="5635857.9101563" ssCumulativeDirt="724659.85150412" ssYears="0.99007943414506">
+<component1 position="-330.94317626953 27.818471908569 -116.38204956055" rotation="0.16861964762211 -1.4773895740509 6.4802852648427e-06"/>
+<configuration name="wheel" id="1"/>
+<boughtConfiguration name="wheel" id="1"/>
+<mpManager_MoneyStats farm="The Bank"/>
+<wheelDirt wheel1="0.999059" wheel2="0.999059" wheel3="0.600000" wheel4="0.600000"/>
+</vehicle>
+*/
+    if (typeof urlSavegame != 'undefined') {
+        var urlSavegameVehicles = urlSavegame.replace("careerSavegame", "vehicles");
+        $.get(urlSavegameVehicles, function(data) {
+            vehiclesArray.length = 0;
+            var careerVehicles = $(data).find("careerVehicles vehicle");
+            careerVehicles.each(function(index, element) {
+                var careerVehicle = $(element);
+                var vehicle = {};
+                vehicle.id = careerVehicle.attr("id");
+                vehicle.filename = careerVehicle.attr("filename");
+                vehiclesArray.push(vehicle);
+            });
+        }).fail(function() {
+            console.log("getVehicles() failed");
+        });
+    }
+}
+
+function updateEconomyInfo() {
+    if (typeof urlSavegame != 'undefined') {
+        // economy
+        if(gameDay >= 0) {
+            var urlSavegameEco = urlSavegame.replace("careerSavegame", "economy");
+            var salesCount = 0;
+            var salesLines = "";
+
+            $.get(urlSavegameEco, function(data){
+                var vehicleShopSales = $(data).find("economy vehicleShopSales vehicleShopSale");
+                if(vehicleShopSales != null) {
+                    vehicleShopSales.each(function(index, element) {
+                        var vehicleShopSale = $(element);
+                        var xmlFilename = vehicleShopSale.attr("xmlFilename");
+                        var discount = vehicleShopSale.attr("discount");
+                        var saleStartDay = vehicleShopSale.attr("saleStartDay");
+                        var saleStartHour = vehicleShopSale.attr("saleStartHour");
+                        var saleDuration = vehicleShopSale.attr("saleDuration");
+                        var isRunning = vehicleShopSale.attr("isRunning");
+                        //console.log(xmlFilename);
+                        if(isRunning == 'true') {
+                            var found = xmlFilename.match(new RegExp("\/([a-zA-Z0-9]+).xml"));
+                            if(found) {
+                                salesCount++;
+                                var vehicleName = found[1];
+                                salesLines += "<tr><td>" + vehicleName + "</td><td>" + discount + "%</td></tr>";
+                            }
+                        }
+                    });
+                }
+                
+                var brandSale = $(data).find("economy brandSale");
+                if(brandSale != null) {
+                    var xmlFilename = brandSale.attr("xmlFilename");
+                    var discount = brandSale.attr("discount");
+                    var isRunning = brandSale.attr("isRunning");
+                    if(isRunning == 'true') {
+                        var found = xmlFilename.match(new RegExp("\/([a-zA-Z0-9]+).xml"));
+
+                        if(found) {
+                            salesCount++;
+                            var vehicleName = found[1];
+                            salesLines += "<tr><td>Brand Sale: " + vehicleName + "</td><td>" + discount + "%</td></tr>";
+                        }
+                    }
+                }
+                
+                if(salesCount > 0) {
+                    $("#webStatsSales").find("tr").remove();
+                    $("#webStatsSales").append(salesLines);
+                    $("#webStatsSalesContainer").show();
+                } else {
+                    $("#webStatsSalesContainer").hide();
+                }
+            }).fail(function() {
+                console.log("updateCareerSavegameInfo() failed for " + urlSavegameEco);
+            });
+        }
+    } else {
+        $("#webStatsSalesContainer").hide();
+    }
+}
+
 window.onload=function(e) {
     $("#updateIntervalSeconds").text(updateIntervalSeconds);
     updateInfo();
-    updateFarmInfo();
+    updateCareerSavegameInfo();
 };
 
 function mapShowTypeChanged() {
@@ -404,6 +502,7 @@ caption {
 td {
     vertical-align: top;
     text-align: left;
+    padding-right: 4px;
 }
 th {
     text-align: left;
@@ -452,7 +551,13 @@ td.forecastCell {
 <br>
     <div id="webStatsForecastContainer" style="display:none">
         <table id="webStatsForecast">
-        <caption>Weekly Forecast</weekly>
+        <caption>Weekly Forecast</caption>
+        </table>
+    </div>
+<br>
+    <div id="webStatsSalesContainer" style="display:none">
+        <table id="webStatsSales">
+        <caption>Current Sales</caption>
         </table>
     </div>
 <br>
