@@ -111,7 +111,7 @@ function updateInfo() {
             var Players = $(data).find("Server Slots Player");
             var lineNum = 0;
             if (webStatsPlayers != null && Players != null) {
-                $("#webStatsPlayers").find("tr:not(:first)").remove();
+                $("#webStatsPlayers").find("tr").remove();
                 Players.each(function(index, element) {
                     var Player = $(element);
                     if (Player.attr("isUsed") == "true") {
@@ -592,15 +592,14 @@ table.noborders {
     </div>
 <br>
     <div id="webStatsSalesContainer" style="display:none">
-        <table id="webStatsSales">
+        <table id="webStatsSales" class="noborders">
         <caption>Current Sales</caption>
         </table>
     </div>
 <br>
     <div style="display:none;" id="webStatsPlayersContainer">
-        <table id="webStatsPlayers">
+        <table id="webStatsPlayers" class="noborders">
         <caption>Players Online</caption>
-        <tr><th>Name</th><th>Uptime</th></tr>
         </table>
     </div>
 <br>
