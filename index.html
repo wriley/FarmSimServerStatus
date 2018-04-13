@@ -28,6 +28,17 @@ var seasonsTransitions = [
     'Late Winter'
 ];
 
+var weekDays = [
+    'DUMMY',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+];
+
 // https://gist.github.com/wteuber/6241786
 Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };
 
@@ -53,6 +64,12 @@ function getPrice(x) {
 }
 
 function pad(num, size=2){ return ('000000000' + num).substr(-size); }
+
+
+function dayOfWeek(dayNumber) {
+    // assumes that day 1 = monday
+    return Math.fmod(dayNumber - 1, 7) + 1;
+}
 
 function updateInfo() {
     mapShowTypeChecked = $("#mapShowType input:checkbox:checked").map(function(){
@@ -290,7 +307,7 @@ function updateFarmInfo() {
                 var season = seasonsTransitions[latestTransition];
                             
                 //console.log("season: " + season);
-                $("#webStatsDay").text(pad(day) + "/" + season);
+                $("#webStatsDay").html(pad(day) + "/" + season + " <span class=\"note\">(" + daysInSeason + " day seasons)</span>");
                 
                 // get soil temp
                 var ssSeasonsWeather = $(data).find("careerSavegame weather");
@@ -308,11 +325,14 @@ function updateFarmInfo() {
                 var i = 0;
                 ssSeasonsForecastDays.each(function(index, element) {
                     var day = $(element);
-                    //console.log("day " + day.attr("day") + " " + day.attr("weatherState") + " " + day.attr("highTemp") + " " + day.attr("lowTemp"));
+                    var weekDay = weekDays[dayOfWeek(day.attr("day"))];
+                    var weatherState = day.attr("weatherState");
+                    //console.log("day " + day.attr("day") + " " + weatherState + " " + day.attr("highTemp") + " " + day.attr("lowTemp"));
                     if(i == 0) {
-                        $("#webStatsTodayForecast").text(day.attr("weatherState") + " " + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C");
+                        $("#webStatsForecastToday").find("tr").remove();
+                        $("#webStatsForecastToday").append("<tr><td class=\"forecastCell\">" + weekDay + "<br><img src=\"icons/" + weatherState + ".png\" alt=\"" + weatherState + "\"></img><br>" + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C</td></tr>");
                     } else {
-                        forecastLines += "<td class=\"forecastCell\">" + day.attr("weatherState") + "<br>" + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C</td>";
+                        forecastLines += "<td class=\"forecastCell\">" + weekDay + "<br><img src=\"icons/" + weatherState + ".png\" alt=\"" + weatherState + "\"></img><br>" + Math.round(day.attr("highTemp")) + "C/" + Math.round(day.attr("lowTemp")) + "C</td>";
                     }
                     i++;
                 });
@@ -423,8 +443,11 @@ td.forecastCell {
 
     <div id="webStatsWeatherContainer" style="display:none">
         <span class="label">Day: </span><span id="webStatsDay"></span>&nbsp;&nbsp;
-        <span class="label">Soil Temp: </span><span id="webStatsSoilTemp"></span>&nbsp;&nbsp;
-        <span class="label">Today: </span><span id="webStatsTodayForecast"></span>&nbsp;&nbsp;
+        <span class="label">Soil Temp: </span><span id="webStatsSoilTemp"></span>
+    </div>
+<br>
+    <div>
+        <span class="label">Today's Forecast</span><table id="webStatsForecastToday"></table>
     </div>
 <br>
     <div id="webStatsForecastContainer" style="display:none">
@@ -463,4 +486,3 @@ td.forecastCell {
 </div>
 </body>
 </html>
-
