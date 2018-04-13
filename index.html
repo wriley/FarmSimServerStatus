@@ -109,6 +109,7 @@ function updateInfo() {
             
             var webStatsPlayers = $("#webStatsPlayers");
             var Players = $(data).find("Server Slots Player");
+            var lineNum = 0;
             if (webStatsPlayers != null && Players != null) {
                 $("#webStatsPlayers").find("tr:not(:first)").remove();
                 Players.each(function(index, element) {
@@ -125,7 +126,13 @@ function updateInfo() {
                         }
 
                         if (minutes < 10) {minutes = "0"+minutes;}
-                        webStatsPlayers.append("<tr><td>"+playerText+"</td><td>"+hours+"h "+minutes+"m</td></tr>");
+                        if((lineNum % 2) == 0) {
+                            lineClass = "even";
+                        } else {
+                            lineClass = "odd";
+                        }
+                        webStatsPlayers.append("<tr class=\"" + lineClass + "\"><td>"+playerText+"</td><td>"+hours+"h "+minutes+"m</td></tr>");
+                        lineNum++;
                     }
                 });
             }
@@ -276,9 +283,16 @@ function updateCareerSavegameInfo() {
                 keys.sort();
                 
                 var userNameLines = [];
-                
+                var lineNum = 0;
+                var lineClass = "";
                 keys.forEach(function(element) {
-                    userNameLines.push("<tr><td>" + element + "</td><td>" + farms[element] + "</td></tr>");
+                    if((lineNum % 2) == 0) {
+                        lineClass = "even";
+                    } else {
+                        lineClass = "odd";
+                    }
+                    userNameLines.push("<tr class=\"" + lineClass + "\"><td>" + element + "</td><td>" + farms[element] + "</td></tr>");
+                    lineNum++;
                 });
 
                 userNameLines.forEach(function(element) {
@@ -371,6 +385,8 @@ function getVehicles() {
 <mpManager_MoneyStats farm="The Bank"/>
 <wheelDirt wheel1="0.999059" wheel2="0.999059" wheel3="0.600000" wheel4="0.600000"/>
 </vehicle>
+
+not used yet
 */
     if (typeof urlSavegame != 'undefined') {
         var urlSavegameVehicles = urlSavegame.replace("careerSavegame", "vehicles");
@@ -410,12 +426,18 @@ function updateEconomyInfo() {
                         var saleDuration = vehicleShopSale.attr("saleDuration");
                         var isRunning = vehicleShopSale.attr("isRunning");
                         //console.log(xmlFilename);
+                        var lineClass = "";
                         if(isRunning == 'true') {
                             var found = xmlFilename.match(new RegExp("\/([a-zA-Z0-9]+).xml"));
                             if(found) {
-                                salesCount++;
                                 var vehicleName = found[1];
-                                salesLines += "<tr><td>" + vehicleName + "</td><td>" + discount + "%</td></tr>";
+                                if((salesCount % 2) == 0) {
+                                    lineClass = "even";
+                                } else {
+                                    lineClass = "odd";
+                                }
+                                salesLines += "<tr class=\"" + lineClass + "\"><td>" + vehicleName + "</td><td>" + discount + "%</td></tr>";
+                                salesCount++;
                             }
                         }
                     });
@@ -432,7 +454,12 @@ function updateEconomyInfo() {
                         if(found) {
                             salesCount++;
                             var vehicleName = found[1];
-                            salesLines += "<tr><td>Brand Sale: " + vehicleName + "</td><td>" + discount + "%</td></tr>";
+                            if((salesCount % 2) == 0) {
+                                lineClass = "even";
+                            } else {
+                                lineClass = "odd";
+                            }
+                            salesLines += "<tr class=\"" + lineClass + "\"><td>Brand Sale: " + vehicleName + "</td><td>" + discount + "%</td></tr>";
                         }
                     }
                 }
@@ -504,6 +531,12 @@ td {
     text-align: left;
     padding-right: 4px;
 }
+tr.odd {
+    background-color: #a0a0a0;
+}
+tr.even {
+    background-color: #c0c0c0;
+}
 th {
     text-align: left;
 }
@@ -526,6 +559,9 @@ td.forecastCell {
     text-align: center;
     padding: 2px;
     border: 1px solid black;
+}
+table.noborders {
+    border-collapse:collapse;
 }
 </style>
 </head>
@@ -579,7 +615,7 @@ td.forecastCell {
     <tr><td><div id="webStatsMap" style="position:relative; width:1024px; height:1024px; overflow:visible"></div></td>
         <td>
         <div id="webStatsFarmsContainer" style="display:none">
-            <table id="webStatsFarms">
+            <table id="webStatsFarms" class="noborders">
             <tr><th>Farm Name</th><th>Users</th></tr>
             </table>
         </div></td></tr>
