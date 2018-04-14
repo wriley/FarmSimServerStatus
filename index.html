@@ -330,9 +330,13 @@ function updateCareerSavegameInfo() {
                 
                 // get soil temp
                 var ssSeasonsWeather = $(data).find("careerSavegame weather");
-                var soilTemp = $(ssSeasonsWeather).children("soilTemp").text();
+                var soilTemp = Math.round($(ssSeasonsWeather).children("soilTemp").text());
+                var soilColor = "#008000";
+                if(soilTemp <= 0) {
+                    soilColor = "#ff0000";
+                }
                 
-                $("#webStatsSoilTemp").text(Math.round(soilTemp) + "C");
+                $("#webStatsSoilTemp").html("<font style=\"color: " + soilColor + "\">" + soilTemp + "C</font>");
                 
                 $("#webStatsWeatherContainer").show();
                 
@@ -559,9 +563,16 @@ td.forecastCell {
     text-align: center;
     padding: 2px;
     border: 1px solid black;
+    width: 74px;
 }
 table.noborders {
     border-collapse:collapse;
+}
+table caption {
+    background: #a0a0ff;
+}
+tr.caption {
+    background: #a0a0ff;
 }
 </style>
 </head>
@@ -573,7 +584,7 @@ table.noborders {
         <span class="label">Players/Slots: </span><span id="webStatsPlayerSlots"></span>&nbsp;&nbsp;
         <span class="label">Server Time: </span><span id="webStatsTime"></span>&nbsp;&nbsp;
 
-        <span class="note">NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but some info is only refreshed every 5-30 minutes</span>
+        <span class="note">NOTE: This page refreshes every <span id="updateIntervalSeconds">---</span> seconds but some info is only refreshed on the server every 5-30 minutes</span>
     </div>
 
     <div id="webStatsWeatherContainer" style="display:none">
@@ -582,10 +593,10 @@ table.noborders {
     </div>
 <br>
     <div>
-        <span class="label">Today's Forecast</span><table id="webStatsForecastToday"></table>
+        <span class="label" style="background: #a0a0ff">Today's Forecast</span><table id="webStatsForecastToday"></table>
     </div>
 <br>
-    <div id="webStatsForecastContainer" style="display:none">
+    <div id="webStatsForecastContainer" style="display:none;">
         <table id="webStatsForecast">
         <caption>Weekly Forecast</caption>
         </table>
@@ -615,7 +626,7 @@ table.noborders {
         <td>
         <div id="webStatsFarmsContainer" style="display:none">
             <table id="webStatsFarms" class="noborders">
-            <tr><th>Farm Name</th><th>Users</th></tr>
+            <tr class="caption"><th>Farm Name</th><th>Users</th></tr>
             </table>
         </div></td></tr>
     </table>
