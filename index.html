@@ -254,9 +254,9 @@ function updateCareerSavegameInfo() {
         $.get(urlSavegame, function(data){
 
             var webStatsFarms = $("#webStatsFarms");
-            var userNames = $(data).find("careerSavegame FarmingTablet MpManagement config userNames userName");
+            var userNames = $(data).find("careerSavegame MpManager users user");
             
-            if (webStatsFarms != null && userNames != null) {
+            if (webStatsFarms != null && userNames != null && userNames.length > 0) {
                 $("#webStatsFarms").find("tr:not(:first)").remove();
                 
                 farms = [];
@@ -298,15 +298,15 @@ function updateCareerSavegameInfo() {
                 userNameLines.forEach(function(element) {
                         webStatsFarms.append(element);
                     });
+                $("#webStatsFarmsContainer").show();
             }
-            $("#webStatsFarmsContainer").show();
 
             // get day, season, soil temp, and forecast
             var environment = $(data).find("careerSavegame environment");
             var ssSeasonsEnvironment = $(data).find("careerSavegame ssSeasons environment");
             var ssSeasonsSettings = $(data).find("careerSavegame ssSeasons settings");
             
-            if(environment != null && ssSeasonsEnvironment != null && ssSeasonsSettings != null) {
+            if(environment != null && ssSeasonsEnvironment != null && ssSeasonsEnvironment.length > 0 && ssSeasonsSettings != null && ssSeasonsSettings.length > 0) {
                 // get day
                 var currentDayRaw = parseInt($(environment).children("currentDay").text());
                 gameDay = currentDayRaw;
@@ -363,8 +363,10 @@ function updateCareerSavegameInfo() {
                 $("#webStatsForecast").find("tr").remove();
                 webStatsForecast.append(forecastLines);
                 
-                
+                $("#webStatsTodayForecastContainer").show();
                 $("#webStatsForecastContainer").show();
+            } else {
+                $("#webStatsDay").html("");
             }
             
             updateEconomyInfo();
@@ -488,6 +490,8 @@ window.onload=function(e) {
     $("#updateIntervalSeconds").text(updateIntervalSeconds);
     updateInfo();
     updateCareerSavegameInfo();
+    console.log(urlStats);
+    console.log(urlSavegame);
 };
 
 function mapShowTypeChanged() {
@@ -533,7 +537,7 @@ caption {
 td {
     vertical-align: top;
     text-align: left;
-    padding-right: 4px;
+    padding-right: 14px;
 }
 tr.odd {
     background-color: #a0a0a0;
@@ -574,6 +578,7 @@ table caption {
 tr.caption {
     background: #a0a0ff;
 }
+
 </style>
 </head>
 <body>
@@ -588,21 +593,25 @@ tr.caption {
     </div>
 
     <div id="webStatsWeatherContainer" style="display:none">
+        <br>
         <span class="label">Day: </span><span id="webStatsDay"></span>&nbsp;&nbsp;
         <span class="label">Soil Temp: </span><span id="webStatsSoilTemp"></span>
     </div>
-<br>
-    <div>
+
+    <div id="webStatsTodayForecastContainer" style="display:none;">
+        <br>
         <span class="label" style="background: #a0a0ff">Today's Forecast</span><table id="webStatsForecastToday"></table>
     </div>
-<br>
+
     <div id="webStatsForecastContainer" style="display:none;">
+        <br>
         <table id="webStatsForecast">
         <caption>Weekly Forecast</caption>
         </table>
     </div>
-<br>
+
     <div id="webStatsSalesContainer" style="display:none">
+        <br>
         <table id="webStatsSales" class="noborders">
         <caption>Current Sales</caption>
         </table>
